@@ -1,29 +1,11 @@
-const net = require('net')
-const server = net.createServer()
-server.on('connection', handleConnection)
-const connections = []
-server.listen(9000, function () {
-  console.log('server listening to %j', server.address())
-})
+// pubber.js 
+var zmq = require('zeromq')
+  , sock = zmq.socket('pub');
 
-function handleConnection (socket) {
+sock.bindSync('tcp://127.0.0.1:3000');
+console.log('Publisher bound to port 3000');
 
-  connections.push(socket)
-
-  const remoteAddress = `${socket.remoteAddress}:${socket.remotePort}`
-  console.log(`new client connection from ${remoteAddress}`)
-  console.log(socket.data)
-  socket.setEncoding('utf8')
-
-  socket.on('data', (data) => {
-    connections.forEach((connection) => connection.write(` ${remoteAddress} says :${data}`))
-    // socket.write(`${remoteAddress} says: ${data} `)
-  })
-  socket.on('close', () => {
-    console.log(`Closing connection from:${remoteAddress}`)
-    // Todo rmeove connection from array on leave
-  })
-  socket.on('error', (error) => {
-    console.log(`${remoteAddress} error, ${error}`)
-  })
-}
+setInterval(function () {
+  console.log('sending a multipart message envelope');
+  sock.send(['kitty cats', 'meow!']);
+}, 500);
